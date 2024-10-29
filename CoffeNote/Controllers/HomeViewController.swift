@@ -1,30 +1,26 @@
 import UIKit
+import UserNotifications
 
-
-struct CoffeePlace {
+struct CoffeePlace: Codable {
     let name: String
-    let rating: Int
-    let items: String
+    let rating: Double
+    let item: String
     let price: Double
-    let image: UIImage
+    let imageData: Data? // Add image data to store a photo of the item
 }
 
 
-import UserNotifications
+
 
 func scheduleNotification() {
     let content = UNMutableNotificationContent()
-    content.title = "Check Out Your Favorite Coffee Place!"
-    content.body = "Remember to visit and log new coffee places!"
+    content.title = "[CoffeNote] A gentle reminder to take your pills!"
+    content.body = "This is me hoping you had a great day! But to make it an even better day, you should take your pills 😎😎"
     content.sound = .default
-    
-    // Set a trigger for 5 seconds from now (for testing purposes)
+
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-    
-    // Create the request
     let request = UNNotificationRequest(identifier: "coffeeReminder", content: content, trigger: trigger)
-    
-    // Add the notification request to the notification center
+
     UNUserNotificationCenter.current().add(request) { error in
         if let error = error {
             print("Error scheduling notification: \(error.localizedDescription)")
@@ -46,16 +42,11 @@ class HomeViewController: UIViewController, UITableViewDataSource, UITableViewDe
         return table
     }()
     
-    private let addLocationButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Add Location", for: .normal)
-        button.addTarget(self, action: #selector(addLocationTapped), for: .touchUpInside)
-        return button
-    }()
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+
+        loadCoffeePlaces() // Load saved coffee places from UserDefaults
         setupTableView()
         setupAddLocationButton()
         scheduleNotification()
@@ -72,15 +63,25 @@ class HomeViewController: UIViewController, UITableViewDataSource, UITableViewDe
         let addLocationButton = UIBarButtonItem(title: "Add Location", style: .plain, target: self, action: #selector(addLocationTapped))
         navigationItem.rightBarButtonItem = addLocationButton
     }
-
+    
+    private func saveCoffeePlaces() {
+        if let encodedData = try? JSONEncoder().encode(coffeePlaces) {
+            UserDefaults.standard.set(encodedData, forKey: "savedCoffeePlaces")
+        }
+    }
+    
+    private func loadCoffeePlaces() {
+        if let savedData = UserDefaults.standard.data(forKey: "savedCoffeePlaces"),
+           let decodedPlaces = try? JSONDecoder().decode([CoffeePlace].self, from: savedData) {
+            coffeePlaces = decodedPlaces
+        }
+    }
     
     @objc private func addLocationTapped() {
-        print("Add Location button tapped") // Check if this prints to the console
         let addVC = AddLocationViewController()
         addVC.delegate = self
         navigationController?.pushViewController(addVC, animated: true)
     }
-
     
     // UITableViewDataSource Methods
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -91,15 +92,86 @@ class HomeViewController: UIViewController, UITableViewDataSource, UITableViewDe
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         let coffeePlace = coffeePlaces[indexPath.row]
         cell.textLabel?.text = "\(coffeePlace.name) - Rating: \(coffeePlace.rating)"
-        cell.imageView?.image = coffeePlace.image
+        
+        if let imageData = coffeePlace.imageData {
+            cell.imageView?.image = UIImage(data: imageData)
+        } else {
+            cell.imageView?.image = UIImage(systemName: "photo") // Placeholder image
+        }
+        
         return cell
+    }
+    
+    // Swipe Actions
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        // Delete Action
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
+            guard let self = self else { return }
+            self.coffeePlaces.remove(at: indexPath.row)
+            self.saveCoffeePlaces()
+            self.tableView.deleteRows(at: [indexPath], with: .automatic)
+            completionHandler(true)
+        }
+        
+        // Edit Action
+        let editAction = UIContextualAction(style: .normal, title: "Edit") { [weak self] _, _, completionHandler in
+            guard let self = self else { return }
+            let editVC = AddLocationViewController()
+            editVC.delegate = self
+            
+            // Pre-fill with existing data for editing
+            let coffeePlace = self.coffeePlaces[indexPath.row]
+            editVC.loadViewIfNeeded() // Ensure view is loaded
+            editVC.nameTextField.text = coffeePlace.name
+            editVC.ratingTextField.text = String(coffeePlace.rating)
+            editVC.itemTextField.text = coffeePlace.item
+            editVC.priceTextField.text = String(coffeePlace.price)
+            if let imageData = coffeePlace.imageData {
+                editVC.imageView.image = UIImage(data: imageData)
+                editVC.selectedImageData = imageData
+            }
+            
+            // Pass `editVC` to the `updateCoffeePlace` method
+            editVC.saveButton.addTarget(self, action: #selector(self.updateCoffeePlace(_:editVC:)), for: .touchUpInside)
+            
+            self.navigationController?.pushViewController(editVC, animated: true)
+            completionHandler(true)
+        }
+        
+        editAction.backgroundColor = .systemBlue
+        
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction, editAction])
+        return configuration
+    }
+    
+    @objc private func updateCoffeePlace(_ sender: UIButton, editVC: AddLocationViewController) {
+        guard let indexPath = tableView.indexPathForSelectedRow,
+              let name = editVC.nameTextField.text,
+              let ratingText = editVC.ratingTextField.text, let rating = Double(ratingText),
+              let item = editVC.itemTextField.text,
+              let priceText = editVC.priceTextField.text, let price = Double(priceText) else { return }
+        
+        // Update coffee place with new data
+        coffeePlaces[indexPath.row] = CoffeePlace(name: name, rating: rating, item: item, price: price, imageData: editVC.selectedImageData)
+        saveCoffeePlaces()
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+        
+        navigationController?.popViewController(animated: true)
     }
 }
 
-// Conform to a custom delegate to receive new entries
+
+
+
+
+// Conform to the custom delegate to receive new entries
 extension HomeViewController: AddLocationDelegate {
     func didAddCoffeePlace(_ coffeePlace: CoffeePlace) {
         coffeePlaces.append(coffeePlace)
         tableView.reloadData()
+        saveCoffeePlaces() // Save updated coffee places to UserDefaults
     }
 }
+
+
+

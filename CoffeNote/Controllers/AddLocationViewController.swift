@@ -1,122 +1,129 @@
-//
-//  AddLocationViewController.swift
-//  CoffeNote
-//
-//  Created by Vatsal Chandel on 10/27/24.
-//
+import UIKit
 
 protocol AddLocationDelegate: AnyObject {
     func didAddCoffeePlace(_ coffeePlace: CoffeePlace)
 }
 
-import UIKit
-import UserNotifications
-
-
-
-
 class AddLocationViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
-    weak var delegate: AddLocationDelegate?
+    var delegate: AddLocationDelegate?
+    var selectedImageData: Data?
     
-    private let coffeePlaceTextField = UITextField()
-    private let ratingTextField = UITextField()
-    private let itemsTextField = UITextField()
-    private let priceTextField = UITextField()
-    private let imageView = UIImageView()
-    private let uploadImageButton = UIButton()
-    private let saveButton = UIButton()
+    let nameTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Coffee Place Name"
+        textField.borderStyle = .roundedRect
+        return textField
+    }()
+    
+    let ratingTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Rating (0-5)"
+        textField.keyboardType = .decimalPad
+        textField.borderStyle = .roundedRect
+        return textField
+    }()
+    
+    let itemTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "What you got"
+        textField.borderStyle = .roundedRect
+        return textField
+    }()
+    
+    let priceTextField: UITextField = {
+        let textField = UITextField()
+        textField.placeholder = "Price Paid"
+        textField.keyboardType = .decimalPad
+        textField.borderStyle = .roundedRect
+        return textField
+    }()
+    
+    let imageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.layer.cornerRadius = 10
+        iv.clipsToBounds = true
+        iv.backgroundColor = .secondarySystemBackground
+        return iv
+    }()
+    
+    let selectImageButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Select Image", for: .normal)
+        button.addTarget(self, action: #selector(selectImageTapped), for: .touchUpInside)
+        return button
+    }()
+    
+    let saveButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Save", for: .normal)
+        button.addTarget(self, action: #selector(saveCoffeePlace), for: .touchUpInside)
+        return button
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
-        setupDismissKeyboardGesture()
-
-    }
-    
-    private func setupDismissKeyboardGesture() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        view.addGestureRecognizer(tapGesture)
-    }
-
-    @objc private func dismissKeyboard() {
-        view.endEditing(true) // This dismisses the keyboard
-    }
-    
-    
-    
-    private func setupUI() {
         view.backgroundColor = .systemBackground
         
-        coffeePlaceTextField.placeholder = "Coffee Place Name"
-        coffeePlaceTextField.borderStyle = .roundedRect
+        // Add subviews
+        view.addSubview(nameTextField)
+        view.addSubview(ratingTextField)
+        view.addSubview(itemTextField)
+        view.addSubview(priceTextField)
+        view.addSubview(imageView)
+        view.addSubview(selectImageButton)
+        view.addSubview(saveButton)
         
-        ratingTextField.placeholder = "Rating (1-5)"
-        ratingTextField.keyboardType = .numberPad
-        ratingTextField.borderStyle = .roundedRect
-        
-        itemsTextField.placeholder = "Items Ordered"
-        itemsTextField.borderStyle = .roundedRect
-        
-        priceTextField.placeholder = "Price"
-        priceTextField.keyboardType = .decimalPad
-        priceTextField.borderStyle = .roundedRect
-        
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = 10
-        imageView.backgroundColor = .secondarySystemBackground
-        
-        uploadImageButton.setTitle("Upload Image", for: .normal)
-        uploadImageButton.addTarget(self, action: #selector(uploadImageTapped), for: .touchUpInside)
-        
-        saveButton.setTitle("Save", for: .normal)
-        saveButton.backgroundColor = .systemBlue
-        saveButton.layer.cornerRadius = 8
-        saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
-        
-        let stackView = UIStackView(arrangedSubviews: [coffeePlaceTextField, ratingTextField, itemsTextField, priceTextField, imageView, uploadImageButton, saveButton])
-        stackView.axis = .vertical
-        stackView.spacing = 10
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stackView)
-        
-        NSLayoutConstraint.activate([
-            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            imageView.heightAnchor.constraint(equalToConstant: 150)
-        ])
+        // Set up layout
+        setupLayout()
     }
     
-    @objc private func uploadImageTapped() {
-        let imagePickerController = UIImagePickerController()
-        imagePickerController.delegate = self
-        imagePickerController.sourceType = .photoLibrary
-        present(imagePickerController, animated: true, completion: nil)
+    private func setupLayout() {
+        nameTextField.frame = CGRect(x: 20, y: 100, width: view.frame.width - 40, height: 40)
+        ratingTextField.frame = CGRect(x: 20, y: 150, width: view.frame.width - 40, height: 40)
+        itemTextField.frame = CGRect(x: 20, y: 200, width: view.frame.width - 40, height: 40)
+        priceTextField.frame = CGRect(x: 20, y: 250, width: view.frame.width - 40, height: 40)
+        
+        imageView.frame = CGRect(x: 20, y: 300, width: 100, height: 100)
+        selectImageButton.frame = CGRect(x: 130, y: 300, width: 100, height: 40)
+        
+        saveButton.frame = CGRect(x: 20, y: 420, width: view.frame.width - 40, height: 40)
     }
     
-    @objc private func saveTapped() {
-        guard let name = coffeePlaceTextField.text,
-              let ratingText = ratingTextField.text, let rating = Int(ratingText),
-              let items = itemsTextField.text,
-              let priceText = priceTextField.text, let price = Double(priceText),
-              let image = imageView.image else {
-            print("Please fill in all fields.")
-            return
+    @objc private func selectImageTapped() {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .photoLibrary // or .camera to take a photo
+        picker.allowsEditing = true
+        present(picker, animated: true)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true, completion: nil)
+        
+        if let editedImage = info[.editedImage] as? UIImage {
+            imageView.image = editedImage
+            selectedImageData = editedImage.jpegData(compressionQuality: 0.8)
+        } else if let originalImage = info[.originalImage] as? UIImage {
+            imageView.image = originalImage
+            selectedImageData = originalImage.jpegData(compressionQuality: 0.8)
         }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    @objc private func saveCoffeePlace() {
+        // Check if all inputs are valid
+        guard let name = nameTextField.text,
+              let ratingText = ratingTextField.text, let rating = Double(ratingText),
+              let item = itemTextField.text,
+              let priceText = priceTextField.text, let price = Double(priceText) else { return }
         
-        let coffeePlace = CoffeePlace(name: name, rating: rating, items: items, price: price, image: image)
-        delegate?.didAddCoffeePlace(coffeePlace)
+        let newCoffeePlace = CoffeePlace(name: name, rating: rating, item: item, price: price, imageData: selectedImageData)
+        delegate?.didAddCoffeePlace(newCoffeePlace)
         navigationController?.popViewController(animated: true)
     }
-    
-    // UIImagePickerControllerDelegate Methods
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        picker.dismiss(animated: true, completion: nil)
-        if let selectedImage = info[.originalImage] as? UIImage {
-            imageView.image = selectedImage
-        }
-    }
 }
-
