@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E1CD382D2CDB256400682549 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = E1CD382C2CDB255D00682549 /* README.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E1C9195C2CCE0E4D003D0C53 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		E1C919452CCE0E4C003D0C53 /* CoffeNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CoffeNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1C9195B2CCE0E4D003D0C53 /* CoffeNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CoffeNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1C919652CCE0E4D003D0C53 /* CoffeNoteUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CoffeNoteUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1CD382C2CDB255D00682549 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +93,7 @@
 		E1C9193C2CCE0E4C003D0C53 = {
 			isa = PBXGroup;
 			children = (
+				E1CD382C2CDB255D00682549 /* README.md */,
 				E1C919472CCE0E4C003D0C53 /* CoffeNote */,
 				E1C9195E2CCE0E4D003D0C53 /* CoffeNoteTests */,
 				E1C919682CCE0E4D003D0C53 /* CoffeNoteUITests */,
@@ -225,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1CD382D2CDB256400682549 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

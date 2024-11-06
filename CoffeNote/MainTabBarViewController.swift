@@ -13,7 +13,11 @@ class MainTabBarViewController: UITabBarController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        view.backgroundColor = .red
+        view.backgroundColor = .systemBackground
+        
+        //Database
+        // Memory management is stable 
+        
         print("TEST")
         
         
