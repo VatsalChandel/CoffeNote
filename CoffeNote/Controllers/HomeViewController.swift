@@ -31,6 +31,82 @@ func scheduleNotification() {
 }
 
 
+func scheduleRandomDailyNotification() {
+    
+    // How to shedule this everyday? 
+    
+    let center = UNUserNotificationCenter.current()
+        
+    // 20 messages
+    let messages = ["Message1", "Message2", "Message3", "message4"]
+    
+    let startHour = 9 // 9 am to 6 pm
+    let endHour = 15
+    let numberOfNotifications = 15
+
+    for _ in 0..<numberOfNotifications {
+
+        let randomHour = Int.random(in: startHour..<endHour)
+        let randomMinute = Int.random(in: 0..<60)
+        let randomIndex = Int.random(in: 0..<messages.count)
+        
+        var dateComponents = DateComponents()
+        dateComponents.hour = randomHour
+        dateComponents.minute = randomMinute
+        
+        print("sending at \(dateComponents) message: \(messages[randomIndex])")
+        
+        
+        let content = UNMutableNotificationContent()
+        content.title = "[CoffeNote] Time to discover a new coffee place!"
+        content.body = "Message: \(messages[randomIndex]) \(randomHour) : \(randomMinute)"
+        content.sound = .default
+
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        center.add(request) { error in
+            if let error = error {
+                print("Error scheduling random notification: \(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+
+func bombNotifications() {
+    let center = UNUserNotificationCenter.current()
+   
+    let numNotifs = 500
+    
+    for i in 0..<numNotifs {
+            // Generate a random interval in seconds (e.g., between 15 and 30 minutes)
+        let randomInterval = TimeInterval(Int.random(in: 1...2)) // 900s = 15 min, 1800s = 30 min
+        
+        let content = UNMutableNotificationContent()
+        content.title = "[CoffeNote] Time for a coffee break!"
+        content.body = "Take a moment to savor some coffee ☕"
+        content.sound = .default
+
+        // Create a trigger based on the random interval
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: randomInterval, repeats: false)
+
+        // Create a request with a unique identifier
+        let request = UNNotificationRequest(identifier: "frequentNotification_\(i)", content: content, trigger: trigger)
+
+        // Schedule the notification
+        center.add(request) { error in
+            if let error = error {
+                print("Error scheduling frequent notification: \(error.localizedDescription)")
+            } else {
+                print("Notification scheduled with interval: \(randomInterval) seconds at i = \(i).")
+            }
+        }
+    }
+}
+
+
 
 class HomeViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
@@ -50,6 +126,8 @@ class HomeViewController: UIViewController, UITableViewDataSource, UITableViewDe
         setupTableView()
         setupAddLocationButton()
         scheduleNotification()
+        scheduleRandomDailyNotification()
+        // bombNotifications() // Tries 500 notifications
     }
     
     private func setupTableView() {

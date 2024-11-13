@@ -16,7 +16,7 @@ class MainTabBarViewController: UITabBarController {
         view.backgroundColor = .systemBackground
         
         //Database
-        // Memory management is stable 
+        // Memory management is stable
         
         print("TEST")
         
